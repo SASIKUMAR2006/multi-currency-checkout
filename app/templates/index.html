@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Multi-Currency Checkout</title>
+    <style>
+        body {
+            font-family: Arial;
+            background-color: #f4f6f8;
+            text-align: center;
+            margin-top: 50px;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            width: 400px;
+            margin: auto;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            text-align: left;
+            background: #f1f1f1;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Multi-Currency Checkout</h2>
+
+    <input type="number" id="amount" placeholder="Enter Amount in GBP" />
+
+    <select id="currency">
+        <option value="USD">USD</option>
+        <option value="EUR">EUR</option>
+        <option value="GBP">GBP</option>
+    </select>
+
+    <button onclick="convert()">Checkout</button>
+
+    <div class="result" id="result"></div>
+</div>
+
+<script>
+async function convert() {
+    const amount = document.getElementById("amount").value;
+    const currency = document.getElementById("currency").value;
+
+    const response = await fetch(`/checkout?amount=${amount}&currency=${currency}`, {
+        method: "POST"
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+        document.getElementById("result").innerHTML = `
+            <strong>Base Price:</strong> £${data.base_price}<br>
+            <strong>FX Rate Used:</strong> ${data.fx_rate_used}<br>
+            <strong>Converted Price:</strong> ${data.converted_price} ${currency}<br>
+            <strong>Rounding Applied:</strong> ${data.rounding_applied}
+        `;
+    } else {
+        document.getElementById("result").innerHTML = 
+            `<span style="color:red;">${data.detail}</span>`;
+    }
+}
+</script>
+
+</body>
+</html>
