@@ -1,87 +1,1246 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Multi-Currency Checkout</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Currency Checkout System</title>
     <style>
-        body {
-            font-family: Arial;
-            background-color: #f4f6f8;
-            text-align: center;
-            margin-top: 50px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a1628 0%, #0d2b5e 30%, #1a3a7a 60%, #0d2b5e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Static currency symbols background */
+        .currency-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .currency-bg span {
+            position: absolute;
+            display: block;
+            font-weight: 700;
+        }
+
+        .currency-bg span:nth-child(1)  { left: 3%;  top: 8%;   font-size: 60px;  color: rgba(100, 160, 255, 0.12); transform: rotate(-15deg); }
+        .currency-bg span:nth-child(2)  { left: 12%; top: 35%;  font-size: 90px;  color: rgba(140, 180, 255, 0.10); transform: rotate(10deg); }
+        .currency-bg span:nth-child(3)  { left: 18%; top: 70%;  font-size: 40px;  color: rgba(100, 160, 255, 0.12); transform: rotate(-25deg); }
+        .currency-bg span:nth-child(4)  { left: 25%; top: 15%;  font-size: 110px; color: rgba(80, 140, 255, 0.15); transform: rotate(5deg); }
+        .currency-bg span:nth-child(5)  { left: 33%; top: 55%;  font-size: 55px;  color: rgba(100, 160, 255, 0.12); transform: rotate(20deg); }
+        .currency-bg span:nth-child(6)  { left: 42%; top: 25%;  font-size: 130px; color: rgba(120, 170, 255, 0.18); transform: rotate(-8deg); }
+        .currency-bg span:nth-child(7)  { left: 48%; top: 78%;  font-size: 45px;  color: rgba(100, 160, 255, 0.12); transform: rotate(30deg); }
+        .currency-bg span:nth-child(8)  { left: 55%; top: 10%;  font-size: 75px;  color: rgba(100, 160, 255, 0.13); transform: rotate(-20deg); }
+        .currency-bg span:nth-child(9)  { left: 62%; top: 48%;  font-size: 50px;  color: rgba(100, 160, 255, 0.12); transform: rotate(15deg); }
+        .currency-bg span:nth-child(10) { left: 70%; top: 65%;  font-size: 100px; color: rgba(80, 140, 255, 0.16); transform: rotate(-12deg); }
+        .currency-bg span:nth-child(11) { left: 78%; top: 20%;  font-size: 65px;  color: rgba(100, 160, 255, 0.12); transform: rotate(25deg); }
+        .currency-bg span:nth-child(12) { left: 85%; top: 50%;  font-size: 85px;  color: rgba(140, 180, 255, 0.11); transform: rotate(-5deg); }
+        .currency-bg span:nth-child(13) { left: 90%; top: 80%;  font-size: 35px;  color: rgba(100, 160, 255, 0.12); transform: rotate(18deg); }
+        .currency-bg span:nth-child(14) { left: 93%; top: 12%;  font-size: 70px;  color: rgba(100, 160, 255, 0.14); transform: rotate(-22deg); }
+        .currency-bg span:nth-child(15) { left: 5%;  top: 52%;  font-size: 95px;  color: rgba(120, 170, 255, 0.12); transform: rotate(8deg); }
+        .currency-bg span:nth-child(16) { left: 15%; top: 88%;  font-size: 50px;  color: rgba(100, 160, 255, 0.12); transform: rotate(-18deg); }
+        .currency-bg span:nth-child(17) { left: 30%; top: 40%;  font-size: 80px;  color: rgba(80, 140, 255, 0.10); transform: rotate(12deg); }
+        .currency-bg span:nth-child(18) { left: 50%; top: 5%;   font-size: 120px; color: rgba(140, 180, 255, 0.17); transform: rotate(-3deg); }
+        .currency-bg span:nth-child(19) { left: 58%; top: 72%;  font-size: 42px;  color: rgba(100, 160, 255, 0.12); transform: rotate(22deg); }
+        .currency-bg span:nth-child(20) { left: 72%; top: 85%;  font-size: 58px;  color: rgba(100, 160, 255, 0.13); transform: rotate(-10deg); }
+        .currency-bg span:nth-child(21) { left: 88%; top: 35%;  font-size: 105px; color: rgba(80, 140, 255, 0.15); transform: rotate(6deg); }
+        .currency-bg span:nth-child(22) { left: 38%; top: 90%;  font-size: 38px;  color: rgba(100, 160, 255, 0.12); transform: rotate(-28deg); }
+        .currency-bg span:nth-child(23) { left: 22%; top: 22%;  font-size: 68px;  color: rgba(120, 170, 255, 0.11); transform: rotate(14deg); }
+        .currency-bg span:nth-child(24) { left: 65%; top: 30%;  font-size: 48px;  color: rgba(100, 160, 255, 0.12); transform: rotate(-7deg); }
+
+        /* Glowing radial highlights to mimic light spots in the image */
+        .currency-bg::before {
+            content: '';
+            position: absolute;
+            top: 20%;
+            left: 30%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(60, 120, 255, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .currency-bg::after {
+            content: '';
+            position: absolute;
+            bottom: 10%;
+            right: 20%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(80, 140, 255, 0.12) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 900px;
+            position: relative;
+            z-index: 1;
+        }
+
         .container {
             background: white;
-            padding: 30px;
-            width: 400px;
-            margin: auto;
-            border-radius: 10px;
-            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
         }
-        input, select, button {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-        }
-        button {
-            background-color: #007bff;
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border: none;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .currency-symbol {
+            background: #f0f0f0;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #667eea;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        input[type="number"],
+        select {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        select {
             cursor: pointer;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3e%3cpath d='M6 9l6 6 6-6'%3e%3c/path%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 18px;
+            padding-right: 40px;
+            appearance: none;
         }
-        button:hover {
-            background-color: #0056b3;
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
         }
-        .result {
+
+        button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-convert {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-convert:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-convert:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-convert:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-reset {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-reset:hover:not(:disabled) {
+            background: #e0e0e0;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f0f0f0;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-box {
+            display: none;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .result-box.success {
+            display: block;
+            border-color: #d4edda;
+            background: #f8fff9;
+        }
+
+        .result-box.error {
+            display: block;
+            border-color: #f8d7da;
+            background: #fff9f8;
+        }
+
+        .result-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .result-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .result-label {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .result-value {
+            display: block;
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .result-item.large {
+            grid-column: 1 / -1;
+        }
+
+        .result-item.large .result-value {
+            font-size: 28px;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            padding: 12px;
+            background: #fff5f5;
+            border-left: 4px solid #dc3545;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .success-icon {
+            color: #28a745;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .error-icon {
+            color: #dc3545;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #667eea;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #333;
             margin-top: 20px;
-            text-align: left;
-            background: #f1f1f1;
-            padding: 10px;
-            border-radius: 5px;
+            line-height: 1.5;
+        }
+
+        .info-box strong {
+            color: #667eea;
+        }
+
+        /* ===== Currency Dashboard Styles ===== */
+        .dashboard-section {
+            margin-top: 20px;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .dashboard-header h2 {
+            font-size: 18px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .tab-group {
+            display: flex;
+            gap: 5px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            padding: 3px;
+        }
+
+        .tab-btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            background: transparent;
+            color: #666;
+            transition: all 0.3s ease;
+            flex: none;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .tab-btn:hover:not(.active) {
+            color: #333;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Currency Overview Cards */
+        .currency-overview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .currency-card {
+            background: white;
+            border-radius: 10px;
+            padding: 18px;
+            border: 2px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .currency-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.15);
+        }
+
+        .currency-card.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+        }
+
+        .currency-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .currency-code {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge.strong { background: #d4edda; color: #155724; }
+        .status-badge.stable { background: #cce5ff; color: #004085; }
+        .status-badge.recovering { background: #fff3cd; color: #856404; }
+        .status-badge.weak { background: #f8d7da; color: #721c24; }
+
+        .currency-card-body {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .card-metric {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+
+        .card-metric-label { color: #888; }
+        .card-metric-value { font-weight: 600; color: #333; }
+
+        .sentiment-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        .sentiment-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .sentiment-dot.bullish { background: #28a745; }
+        .sentiment-dot.neutral { background: #ffc107; }
+        .sentiment-dot.bearish { background: #dc3545; }
+        .sentiment-dot.cautiously { background: #17a2b8; }
+
+        /* Inflation Panel */
+        .inflation-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .inflation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .inflation-current {
+            text-align: center;
+        }
+
+        .inflation-rate-big {
+            font-size: 36px;
+            font-weight: 800;
+            color: #667eea;
+        }
+
+        .inflation-rate-label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .inflation-meta {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .inflation-meta-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .inflation-meta-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .inflation-meta-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .inflation-meta-value.positive { color: #dc3545; }
+        .inflation-meta-value.negative { color: #28a745; }
+
+        /* Inflation Chart (CSS bars) */
+        .inflation-chart {
+            margin-top: 15px;
+        }
+
+        .chart-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .chart-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .chart-bar-label {
+            font-size: 11px;
+            color: #666;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .chart-bar-track {
+            flex: 1;
+            height: 22px;
+            background: #f0f0f0;
+            border-radius: 11px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .chart-bar-fill {
+            height: 100%;
+            border-radius: 11px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.8s ease;
+            display: flex;
+            align-items: center;
+            padding-right: 8px;
+            justify-content: flex-end;
+        }
+
+        .chart-bar-value {
+            font-size: 10px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .target-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dc3545;
+            z-index: 2;
+        }
+
+        .target-label {
+            position: absolute;
+            top: -16px;
+            font-size: 9px;
+            color: #dc3545;
+            font-weight: 600;
+            transform: translateX(-50%);
+        }
+
+        /* Detailed Status Panel */
+        .detail-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .detail-item {
+            background: #f8f9fa;
+            padding: 14px;
+            border-radius: 8px;
+        }
+
+        .detail-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .factors-list {
+            margin-top: 12px;
+        }
+
+        .factors-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .factor-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .factor-item:last-child {
+            border-bottom: none;
+        }
+
+        .factor-bullet {
+            color: #667eea;
+            font-weight: 700;
+            margin-top: 1px;
+        }
+
+        /* Purchasing Power Section */
+        .ppp-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .ppp-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .ppp-icon {
+            font-size: 24px;
+            margin-bottom: 6px;
+        }
+
+        .ppp-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .ppp-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .no-data-msg {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+            font-size: 14px;
+        }
+
+        @media (max-width: 700px) {
+            .currency-overview-grid {
+                grid-template-columns: 1fr;
+            }
+            .inflation-meta {
+                grid-template-columns: 1fr;
+            }
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+            .ppp-grid {
+                grid-template-columns: 1fr;
+            }
+            .tab-group {
+                flex-wrap: wrap;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+
+            button {
+                padding: 12px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Animated floating currency symbols background -->
+    <div class="currency-bg">
+        <span>$</span><span>€</span><span>£</span><span>¥</span>
+        <span>₹</span><span>$</span><span>€</span><span>£</span>
+        <span>¥</span><span>₣</span><span>$</span><span>€</span>
+        <span>£</span><span>¥</span><span>₹</span><span>$</span>
+        <span>€</span><span>£</span><span>¥</span><span>₩</span>
+        <span>$</span><span>€</span><span>£</span><span>¥</span>
+    </div>
 
-<div class="container">
-    <h2>Multi-Currency Checkout</h2>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <h1>💱 Multi-Currency Checkout</h1>
+                <p>Fast and secure currency conversion</p>
+            </div>
 
-    <input type="number" id="amount" placeholder="Enter Amount in GBP" />
+            <div class="content">
+                <!-- Input Form -->
+                <div class="form-group">
+                    <label for="amount">Amount (£ GBP)</label>
+                    <div class="input-group">
+                        <div class="currency-symbol">£</div>
+                        <input type="number" id="amount" placeholder="Enter amount" step="0.01" min="0.01">
+                    </div>
+                </div>
 
-    <select id="currency">
-        <option value="USD">USD</option>
-        <option value="EUR">EUR</option>
-        <option value="GBP">GBP</option>
-    </select>
+                <div class="form-group">
+                    <label for="currency">Convert To</label>
+                    <select id="currency">
+                        <option value="USD">🇺🇸 USD - US Dollar</option>
+                        <option value="EUR">🇪🇺 EUR - Euro</option>
+                        <option value="GBP">🇬🇧 GBP - British Pound</option>
+                    </select>
+                </div>
 
-    <button onclick="convert()">Checkout</button>
+                <!-- Buttons -->
+                <div class="button-group">
+                    <button class="btn-convert" onclick="convert()">Process Checkout</button>
+                    <button class="btn-reset" onclick="reset()">Reset</button>
+                </div>
 
-    <div class="result" id="result"></div>
-</div>
+                <!-- Loading State -->
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 15px; color: #666;">Processing your conversion...</p>
+                </div>
 
-<script>
-async function convert() {
-    const amount = document.getElementById("amount").value;
-    const currency = document.getElementById("currency").value;
+                <!-- Success Result -->
+                <div class="result-box success" id="resultSuccess">
+                    <div class="result-title">
+                        <span class="success-icon">✓</span>
+                        Conversion Complete
+                    </div>
+                    <div class="result-grid">
+                        <div class="result-item">
+                            <span class="result-label">Base Price (GBP)</span>
+                            <span class="result-value" id="basePrice">-</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Exchange Rate</span>
+                            <span class="result-value" id="fxRate">-</span>
+                        </div>
+                        <div class="result-item large">
+                            <span class="result-label">Final Amount</span>
+                            <span class="result-value" id="convertedPrice">-</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Rounding Applied</span>
+                            <span class="result-value" id="rounding">-</span>
+                        </div>
+                    </div>
+                </div>
 
-    const response = await fetch(`/checkout?amount=${amount}&currency=${currency}`, {
-        method: "POST"
-    });
+                <!-- Error Result -->
+                <div class="result-box error" id="resultError">
+                    <div class="result-title">
+                        <span class="error-icon">✕</span>
+                        Error Processing Request
+                    </div>
+                    <div class="error-message" id="errorMessage">-</div>
+                </div>
 
-    const data = await response.json();
+                <!-- Info Box -->
+                <div class="info-box">
+                    <strong>ℹ️ Note:</strong> A 1% markup fee is automatically applied to all conversions. All amounts are rounded to 2 decimal places.
+                </div>
 
-    if (response.ok) {
-        document.getElementById("result").innerHTML = `
-            <strong>Base Price:</strong> £${data.base_price}<br>
-            <strong>FX Rate Used:</strong> ${data.fx_rate_used}<br>
-            <strong>Converted Price:</strong> ${data.converted_price} ${currency}<br>
-            <strong>Rounding Applied:</strong> ${data.rounding_applied}
-        `;
-    } else {
-        document.getElementById("result").innerHTML = 
-            `<span style="color:red;">${data.detail}</span>`;
-    }
-}
-</script>
+                <!-- Currency Dashboard -->
+                <div class="dashboard-section">
+                    <div class="dashboard-header">
+                        <h2>📊 Currency Dashboard</h2>
+                        <div class="tab-group">
+                            <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+                            <button class="tab-btn" onclick="switchTab('inflation')">Inflation</button>
+                            <button class="tab-btn" onclick="switchTab('details')">Details</button>
+                        </div>
+                    </div>
 
+                    <!-- Overview Tab -->
+                    <div class="tab-content active" id="tab-overview">
+                        <div class="currency-overview-grid" id="currencyOverview">
+                            <div class="no-data-msg">Loading currency data...</div>
+                        </div>
+                    </div>
+
+                    <!-- Inflation Tab -->
+                    <div class="tab-content" id="tab-inflation">
+                        <div class="inflation-panel" id="inflationPanel">
+                            <div class="no-data-msg">Select a currency from the Overview tab to view inflation data</div>
+                        </div>
+                    </div>
+
+                    <!-- Details Tab -->
+                    <div class="tab-content" id="tab-details">
+                        <div class="detail-panel" id="detailPanel">
+                            <div class="no-data-msg">Select a currency from the Overview tab to view detailed status</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Currency symbols map
+        const currencySymbols = {
+            'USD': '$',
+            'EUR': '€',
+            'GBP': '£'
+        };
+
+        const currencyNames = {
+            'USD': 'US Dollar',
+            'EUR': 'Euro',
+            'GBP': 'British Pound'
+        };
+
+        let selectedDashboardCurrency = null;
+
+        // ===== Checkout Functions =====
+        async function convert() {
+            const amount = document.getElementById("amount").value;
+            const currency = document.getElementById("currency").value;
+
+            if (!amount || amount <= 0) {
+                showError("Please enter a valid amount greater than 0");
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch(`/checkout?amount=${amount}&currency=${currency}`, {
+                    method: "POST"
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    displaySuccess(data, currency);
+                } else {
+                    showError(data.detail || "An error occurred during conversion");
+                }
+            } catch (error) {
+                showError("Network error: Unable to process request. Please try again.");
+                console.error("Error:", error);
+            }
+        }
+
+        function displaySuccess(data, currency) {
+            hideLoading();
+            hideError();
+            
+            const symbol = currencySymbols[currency] || '';
+            
+            document.getElementById("basePrice").textContent = `£${parseFloat(data.base_price).toFixed(2)}`;
+            document.getElementById("fxRate").textContent = data.fx_rate_used;
+            document.getElementById("convertedPrice").textContent = `${symbol}${parseFloat(data.converted_price).toFixed(2)} ${currency}`;
+            document.getElementById("rounding").textContent = `${data.rounding_applied}`;
+
+            document.getElementById("resultSuccess").style.display = "block";
+        }
+
+        function showError(message) {
+            hideLoading();
+            document.getElementById("errorMessage").textContent = message;
+            document.getElementById("resultError").style.display = "block";
+            document.getElementById("resultSuccess").style.display = "none";
+        }
+
+        function hideError() {
+            document.getElementById("resultError").style.display = "none";
+        }
+
+        function showLoading() {
+            document.getElementById("loading").style.display = "block";
+            document.getElementById("resultSuccess").style.display = "none";
+            document.getElementById("resultError").style.display = "none";
+            document.querySelector(".btn-convert").disabled = true;
+        }
+
+        function hideLoading() {
+            document.getElementById("loading").style.display = "none";
+            document.querySelector(".btn-convert").disabled = false;
+        }
+
+        function reset() {
+            document.getElementById("amount").value = "";
+            document.getElementById("currency").value = "USD";
+            hideError();
+            document.getElementById("resultSuccess").style.display = "none";
+            document.getElementById("amount").focus();
+        }
+
+        // ===== Dashboard Tab Management =====
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // ===== Currency Overview =====
+        async function loadCurrencyOverview() {
+            try {
+                const response = await fetch('/currencies/overview');
+                const data = await response.json();
+                renderOverviewCards(data);
+            } catch (error) {
+                document.getElementById('currencyOverview').innerHTML =
+                    '<div class="no-data-msg">Failed to load currency data</div>';
+            }
+        }
+
+        function renderOverviewCards(currencies) {
+            const container = document.getElementById('currencyOverview');
+            container.innerHTML = currencies.map(c => `
+                <div class="currency-card ${selectedDashboardCurrency === c.code ? 'selected' : ''}" 
+                     onclick="selectCurrency('${c.code}')">
+                    <div class="currency-card-header">
+                        <span class="currency-code">${c.symbol} ${c.code}</span>
+                        <span class="status-badge ${c.status}">${c.status}</span>
+                    </div>
+                    <div class="currency-card-body">
+                        <div class="card-metric">
+                            <span class="card-metric-label">Strength</span>
+                            <span class="card-metric-value">${capitalize(c.strength)}</span>
+                        </div>
+                        <div class="card-metric">
+                            <span class="card-metric-label">Inflation</span>
+                            <span class="card-metric-value">${c.inflation}%</span>
+                        </div>
+                        <div class="card-metric">
+                            <span class="card-metric-label">Interest Rate</span>
+                            <span class="card-metric-value">${c.interest_rate}%</span>
+                        </div>
+                        <div class="card-metric">
+                            <span class="card-metric-label">Inflation Trend</span>
+                            <span class="card-metric-value">${getTrendIcon(c.inflation_trend)} ${capitalize(c.inflation_trend)}</span>
+                        </div>
+                        <div class="sentiment-indicator">
+                            <span class="sentiment-dot ${c.sentiment.split(' ')[0]}"></span>
+                            <span style="color: #666;">${capitalize(c.sentiment)}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function selectCurrency(code) {
+            selectedDashboardCurrency = code;
+
+            // Re-render overview cards to highlight selection
+            loadCurrencyOverview();
+
+            // Load inflation and detail data in parallel
+            await Promise.all([
+                loadInflationData(code),
+                loadDetailData(code)
+            ]);
+        }
+
+        // ===== Inflation Panel =====
+        async function loadInflationData(currency) {
+            try {
+                const response = await fetch(`/currency/inflation/${currency}`);
+                const data = await response.json();
+                renderInflationPanel(data, currency);
+            } catch (error) {
+                document.getElementById('inflationPanel').innerHTML =
+                    '<div class="no-data-msg">Failed to load inflation data</div>';
+            }
+        }
+
+        function renderInflationPanel(data, currency) {
+            const panel = document.getElementById('inflationPanel');
+            const maxRate = 6; // Max scale for chart bars
+
+            const deviationClass = data.deviation_from_target > 0 ? 'positive' : 'negative';
+
+            const historicalBars = data.historical.map(h => {
+                const width = Math.min((h.rate / maxRate) * 100, 100);
+                return `
+                    <div class="chart-bar-row">
+                        <span class="chart-bar-label">${h.period}</span>
+                        <div class="chart-bar-track">
+                            <div class="target-line" style="left: ${(data.target_rate / maxRate) * 100}%;">
+                                <span class="target-label">Target</span>
+                            </div>
+                            <div class="chart-bar-fill" style="width: ${width}%">
+                                <span class="chart-bar-value">${h.rate}%</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            panel.innerHTML = `
+                <div class="inflation-header">
+                    <div>
+                        <h3 style="color:#333; margin-bottom:4px;">
+                            ${currencySymbols[currency] || ''} ${currency} — ${data.country}
+                        </h3>
+                        <span style="font-size: 12px; color: #888;">Inflation Report</span>
+                    </div>
+                    <div class="inflation-current">
+                        <div class="inflation-rate-big">${data.direction_icon} ${data.current_rate}%</div>
+                        <div class="inflation-rate-label">Current Annual Rate</div>
+                    </div>
+                </div>
+
+                <div class="inflation-meta">
+                    <div class="inflation-meta-item">
+                        <div class="inflation-meta-label">Previous Rate</div>
+                        <div class="inflation-meta-value">${data.previous_rate}%</div>
+                    </div>
+                    <div class="inflation-meta-item">
+                        <div class="inflation-meta-label">Target Rate</div>
+                        <div class="inflation-meta-value">${data.target_rate}%</div>
+                    </div>
+                    <div class="inflation-meta-item">
+                        <div class="inflation-meta-label">Deviation</div>
+                        <div class="inflation-meta-value ${deviationClass}">
+                            ${data.deviation_from_target > 0 ? '+' : ''}${data.deviation_from_target}%
+                        </div>
+                    </div>
+                </div>
+
+                <div class="inflation-chart">
+                    <div class="chart-title">📈 Historical Inflation (Quarterly)</div>
+                    ${historicalBars}
+                </div>
+            `;
+        }
+
+        // ===== Detail Panel =====
+        async function loadDetailData(currency) {
+            try {
+                const response = await fetch(`/currency/report/${currency}`);
+                const data = await response.json();
+                renderDetailPanel(data, currency);
+            } catch (error) {
+                document.getElementById('detailPanel').innerHTML =
+                    '<div class="no-data-msg">Failed to load detail data</div>';
+            }
+        }
+
+        function renderDetailPanel(data, currency) {
+            const panel = document.getElementById('detailPanel');
+            const status = data.status;
+            const pp = data.purchasing_power;
+
+            const factorsHTML = status.factors.map(f => `
+                <div class="factor-item">
+                    <span class="factor-bullet">●</span>
+                    <span>${f}</span>
+                </div>
+            `).join('');
+
+            panel.innerHTML = `
+                <h3 style="color:#333; margin-bottom:15px;">
+                    ${status.symbol} ${status.name} (${currency})
+                </h3>
+
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Central Bank</div>
+                        <div class="detail-value">${status.central_bank}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Interest Rate</div>
+                        <div class="detail-value">${status.interest_rate}%</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Status</div>
+                        <div class="detail-value">
+                            <span class="status-badge ${status.status}">${status.status}</span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Volatility</div>
+                        <div class="detail-value">${capitalize(status.volatility)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Trading Volume</div>
+                        <div class="detail-value">${capitalize(status.trading_volume)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Market Sentiment</div>
+                        <div class="detail-value">${capitalize(status.sentiment)}</div>
+                    </div>
+                </div>
+
+                <div class="factors-list">
+                    <div class="factors-title">🔍 Key Factors</div>
+                    ${factorsHTML}
+                </div>
+
+                <h4 style="color:#333; margin-top: 20px; margin-bottom: 5px; font-size: 13px;">💰 Purchasing Power</h4>
+                <div class="ppp-grid">
+                    <div class="ppp-card">
+                        <div class="ppp-icon">🍔</div>
+                        <div class="ppp-label">Big Mac Index</div>
+                        <div class="ppp-value">${status.symbol}${pp.big_mac_index}</div>
+                    </div>
+                    <div class="ppp-card">
+                        <div class="ppp-icon">🛒</div>
+                        <div class="ppp-label">Basket Cost</div>
+                        <div class="ppp-value">${status.symbol}${pp.basket_cost}</div>
+                    </div>
+                    <div class="ppp-card">
+                        <div class="ppp-icon">⚖️</div>
+                        <div class="ppp-label">PPP Rate</div>
+                        <div class="ppp-value">${pp.ppp_rate}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== Utility Functions =====
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        function getTrendIcon(trend) {
+            const icons = { 'rising': '📈', 'falling': '📉', 'stable': '➡️' };
+            return icons[trend] || '➡️';
+        }
+
+        // ===== Initialization =====
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("amount").addEventListener("keypress", function(e) {
+                if (e.key === "Enter") {
+                    convert();
+                }
+            });
+
+            // Load currency dashboard
+            loadCurrencyOverview();
+        });
+    </script>
 </body>
 </html>

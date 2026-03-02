@@ -110,6 +110,13 @@ graph TB
   - Fetches rates from provider if not cached
   - Stores rates in cache for reuse
 
+- **CurrencyInfoService** (NEW):
+  - Provides currency status indicators (strength, volatility, sentiment)
+  - Tracks inflation data with historical quarterly figures
+  - Calculates inflation deviation from central bank targets
+  - Offers purchasing power comparisons (Big Mac Index, basket costs, PPP rates)
+  - Generates comprehensive currency reports
+
 ### 5. **Provider Layer** 🔌
 - **FxProvider**: Abstract base class defining the exchange rate provider interface
 - **MockFxProvider**: Concrete implementation with hardcoded rates:
@@ -127,6 +134,7 @@ graph TB
 
 ## Data Flow
 
+### Checkout Flow
 1. **Client Request**: Browser submits checkout form with amount and currency
 2. **API Routing**: FastAPI receives POST request to `/checkout` endpoint
 3. **Validation**: CheckoutService validates the requested currency
@@ -139,26 +147,34 @@ graph TB
 10. **Response**: JSON response with base price, rate used, converted price, and rounding difference
 11. **Display**: Browser renders the conversion result to user
 
+### Currency Dashboard Flow (NEW)
+1. **Page Load**: Browser fetches `/currencies/overview` for all currency cards
+2. **Card Click**: User selects a currency to explore
+3. **Parallel Fetch**: Browser loads inflation data and full report concurrently
+4. **Inflation Tab**: Displays current rate, deviation from target, trend direction, and historical chart
+5. **Details Tab**: Shows central bank info, interest rates, volatility, sentiment, key factors, and purchasing power
+
 ## Project Structure
 
 ```
 multi_currency_checkout_with_ui/
 ├── app/
-│   ├── main.py                 # FastAPI application entry point
+│   ├── main.py                      # FastAPI application entry point
 │   ├── cache/
-│   │   └── fx_cache.py         # FxCache implementation
+│   │   └── fx_cache.py              # FxCache implementation
 │   ├── providers/
-│   │   ├── base.py             # FxProvider abstract base class
-│   │   └── mock_provider.py    # MockFxProvider implementation
+│   │   ├── base.py                  # FxProvider abstract base class
+│   │   └── mock_provider.py         # MockFxProvider implementation
 │   ├── services/
-│   │   ├── checkout_service.py # CheckoutService implementation
-│   │   └── fx_service.py       # FxService implementation
+│   │   ├── checkout_service.py      # CheckoutService implementation
+│   │   ├── currency_info_service.py # CurrencyInfoService (status & inflation)
+│   │   └── fx_service.py            # FxService implementation
 │   └── templates/
-│       └── index.html          # Checkout form template
+│       └── index.html               # Checkout form + currency dashboard
 ├── tests/
-│   └── test_checkout.py        # Test suite
-├── requirements.txt            # Python dependencies
-└── ARCHITECTURE.md             # This file
+│   └── test_checkout.py             # Test suite
+├── requirements.txt                 # Python dependencies
+└── ARCHITECTURE.md                  # This file
 ```
 
 ## Key Design Patterns
