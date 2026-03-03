@@ -1,30 +1,132 @@
 from decimal import Decimal
+import pytest
 from app.services.checkout_service import CheckoutService
 from app.services.fx_service import FxService
 from app.services.currency_info_service import CurrencyInfoService
 from app.providers.mock_provider import MockFxProvider
 from app.cache.fx_cache import FxCache
 
-def test_conversion_usd():
+
+# --- Helper to build a fresh checkout service ---
+
+def _make_checkout():
     provider = MockFxProvider()
     cache = FxCache()
     fx_service = FxService(provider, cache)
-    checkout = CheckoutService(fx_service)
+    return CheckoutService(fx_service)
 
+
+# ============================================================
+# Conversion tests – value assertions
+# ============================================================
+
+def test_conversion_usd():
+    checkout = _make_checkout()
     result = checkout.checkout(Decimal("100"), "USD")
 
-    assert "converted_price" in result
+    # 100 * 1.25 * 1.01 = 126.25 (exact, no rounding needed)
+    assert result["base_price"] == "100"
+    assert result["converted_price"] == "126.25"
+    assert result["fx_rate_used"] == "1.2625"
+    assert result["rounding_applied"] == "0.000000"
 
 
 def test_conversion_eur():
+    checkout = _make_checkout()
+    result = checkout.checkout(Decimal("100"), "EUR")
+
+    # 100 * 1.15 * 1.01 = 116.15 (exact)
+    assert result["base_price"] == "100"
+    assert result["converted_price"] == "116.15"
+    assert result["fx_rate_used"] == "1.1615"
+    assert result["rounding_applied"] == "0.000000"
+
+
+def test_conversion_gbp_same_currency():
+    checkout = _make_checkout()
+    result = checkout.checkout(Decimal("50"), "GBP")
+
+    # 50 * 1.00 * 1.01 = 50.50 (exact)
+    assert result["converted_price"] == "50.50"
+    assert result["fx_rate_used"] == "1.0100"
+
+
+def test_conversion_rounding_applied():
+    """Verify rounding is applied and tracked for non-round amounts."""
+    checkout = _make_checkout()
+    # 99.99 * 1.2625 = 126.237375 → rounds to 126.24
+    result = checkout.checkout(Decimal("99.99"), "USD")
+
+    assert result["converted_price"] == "126.24"
+    # rounding_applied = 126.24 - 126.237375 = 0.002625
+    assert Decimal(result["rounding_applied"]) == Decimal("0.002625")
+
+
+def test_conversion_small_amount():
+    checkout = _make_checkout()
+    result = checkout.checkout(Decimal("0.01"), "USD")
+
+    # 0.01 * 1.2625 = 0.012625 → rounds to 0.01
+    assert result["converted_price"] == "0.01"
+
+
+def test_conversion_large_amount():
+    checkout = _make_checkout()
+    result = checkout.checkout(Decimal("999999.99"), "EUR")
+
+    # 999999.99 * 1.1615 = 1161499.988385 → rounds to 1161499.99
+    assert result["converted_price"] == "1161499.99"
+
+
+# ============================================================
+# Edge-case tests
+# ============================================================
+
+def test_invalid_currency_raises():
+    checkout = _make_checkout()
+    with pytest.raises(ValueError, match="Invalid currency"):
+        checkout.checkout(Decimal("100"), "JPY")
+
+
+def test_fx_rate_unavailable():
+    """Provider raises ValueError for unsupported pairs."""
+    provider = MockFxProvider()
+    with pytest.raises(ValueError, match="FX rate unavailable"):
+        provider.get_rate("GBP", "JPY")
+
+
+def test_response_contains_all_keys():
+    checkout = _make_checkout()
+    result = checkout.checkout(Decimal("100"), "USD")
+
+    for key in ("base_price", "fx_rate_used", "converted_price",
+                "rounding_applied", "fx_rate_timestamp"):
+        assert key in result
+
+
+# ============================================================
+# Cache tests
+# ============================================================
+
+def test_cache_returns_cached_rate():
+    """FxService should return the same rate on second call (from cache)."""
     provider = MockFxProvider()
     cache = FxCache()
     fx_service = FxService(provider, cache)
-    checkout = CheckoutService(fx_service)
 
-    result = checkout.checkout(Decimal("100"), "EUR")
+    rate1 = fx_service.get_rate("GBP", "USD")
+    rate2 = fx_service.get_rate("GBP", "USD")
+    assert rate1 == rate2 == Decimal("1.25")
 
-    assert "converted_price" in result
+
+def test_cache_ttl_expiry():
+    """Expired cache entries should not be returned."""
+    cache = FxCache(ttl_seconds=0)  # Immediate expiry
+    cache.set("GBP_USD", Decimal("1.25"))
+
+    import time
+    time.sleep(0.01)
+    assert cache.get("GBP_USD") is None
 
 
 def test_currency_status_usd():
@@ -57,11 +159,8 @@ def test_currency_status_eur():
 
 def test_currency_status_invalid():
     service = CurrencyInfoService()
-    try:
+    with pytest.raises(ValueError):
         service.get_currency_status("JPY")
-        assert False, "Should have raised ValueError"
-    except ValueError:
-        pass
 
 
 def test_inflation_data_usd():
@@ -97,11 +196,8 @@ def test_inflation_data_eur():
 
 def test_inflation_data_invalid():
     service = CurrencyInfoService()
-    try:
+    with pytest.raises(ValueError):
         service.get_inflation_data("JPY")
-        assert False, "Should have raised ValueError"
-    except ValueError:
-        pass
 
 
 def test_purchasing_power():

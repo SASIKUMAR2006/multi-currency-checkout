@@ -1,4 +1,5 @@
 from decimal import Decimal, ROUND_HALF_UP
+from datetime import datetime, timezone
 
 class CheckoutService:
 
@@ -24,11 +25,15 @@ class CheckoutService:
             rounding=ROUND_HALF_UP
         )
 
-        rounding_difference = raw_converted - rounded
+        rounding_difference = (rounded - raw_converted).quantize(
+            Decimal("0.000001"),
+            rounding=ROUND_HALF_UP
+        )
 
         return {
             "base_price": str(base_price),
             "fx_rate_used": str(rate_with_markup),
             "converted_price": str(rounded),
-            "rounding_applied": str(rounding_difference)
+            "rounding_applied": str(rounding_difference),
+            "fx_rate_timestamp": datetime.now(timezone.utc).isoformat()
         }
